@@ -1,5 +1,6 @@
 import json
 import os
+
 import telebot
 from telebot import apihelper, types
 
@@ -18,24 +19,44 @@ if config.get('proxy'):
 
 @bot.message_handler(commands=['start'])
 def get_start_message(message):
+    """Обработчик команды /start."""
     start_message = Answer.get_start()
     bot.send_message(message.from_user.id, start_message['text'])
     keyboard = types.InlineKeyboardMarkup()
     for ans in Answer.get_list(parent_id=start_message['id']):
-        keyboard.add(types.InlineKeyboardButton(ans['text'], callback_data=ans['id']))
-    bot.send_message(message.from_user.id, 'Выберите пункт', reply_markup=keyboard)
+        button = types.InlineKeyboardButton(
+            text=ans['text'],
+            callback_data=ans['id']
+        )
+        keyboard.add(button)
+    bot.send_message(
+        chat_id=message.from_user.id,
+        text='Выберите пункт',
+        reply_markup=keyboard
+    )
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def get_info_about_plan(call):
+def get_answer_on_click(call):
+    """Обработчик нажатия на кнопку."""
+    list_answers = Answer.get_list(parent_id=int(call.data)) \
+                    + Answer.get_menu()
     buttons = []
-    for ans in Answer.get_list(parent_id=int(call.data)):
+    for ans in list_answers:
         if ans['type'] == 'text':
             bot.send_message(call.message.chat.id, ans['text'])
         else:
-            buttons.append(types.InlineKeyboardButton(ans['text'], callback_data=ans['id']))
+            button = types.InlineKeyboardButton(
+                text=ans['text'],
+                callback_data=ans['id']
+            )
+            buttons.append(button)
+
     if buttons:
         keyboard = types.InlineKeyboardMarkup()
         for button in buttons:
             keyboard.add(button)
-        bot.send_message(call.message.chat.id, 'Выберите пункт', reply_markup=keyboard)
+        bot.send_message(
+            chat_id=call.message.chat.id,
+            text='Выберите пункт',
+            reply_markup=keyboard)

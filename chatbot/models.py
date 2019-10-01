@@ -18,12 +18,21 @@ class Answer(models.Model):
     
     @classmethod
     def get_start(cls):
+        """Возвращает первое сообщение."""
         start_message = cls.objects.values('id', 'text').get(parent_id=None)
         return dict(start_message)
 
     @classmethod
     def get_list(cls, parent_id):
+        """Возвращает список дочерних сообщений для parent_id."""
         list_messages = cls.objects.filter(parent_id=parent_id)\
+            .order_by('text').values('id', 'text', 'type')
+        return list(list_messages)
+
+    @classmethod
+    def get_menu(cls):
+        """Возвращает список сообщений, следующих после первого."""
+        list_messages = cls.objects.filter(parent__parent_id=None) \
             .order_by('text').values('id', 'text', 'type')
         return list(list_messages)
 
