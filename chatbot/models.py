@@ -33,7 +33,7 @@ class Answer(models.Model):
     def get_menu(cls):
         """Возвращает список сообщений, следующих после первого."""
         list_messages = cls.objects.filter(parent__parent_id=None) \
-            .order_by('text').values('id', 'text', 'type')
+            .exclude(parent_id=None).order_by('text').values('id', 'text', 'type')
         return list(list_messages)
 
     def __str__(self):
